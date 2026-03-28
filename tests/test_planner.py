@@ -6,18 +6,21 @@ import os
 import sys
 import tempfile
 
-# Mock ROS/hardware dependencies so planner can be imported without them
-sys.modules.setdefault('rospy', __import__('unittest.mock', fromlist=['MagicMock']).MagicMock())
-sys.modules.setdefault('RPi', __import__('unittest.mock', fromlist=['MagicMock']).MagicMock())
-sys.modules.setdefault('RPi.GPIO', __import__('unittest.mock', fromlist=['MagicMock']).MagicMock())
-sys.modules.setdefault('clever', __import__('unittest.mock', fromlist=['MagicMock']).MagicMock())
-sys.modules.setdefault('clever.srv', __import__('unittest.mock', fromlist=['MagicMock']).MagicMock())
-sys.modules.setdefault('mavros_msgs', __import__('unittest.mock', fromlist=['MagicMock']).MagicMock())
-sys.modules.setdefault('mavros_msgs.srv', __import__('unittest.mock', fromlist=['MagicMock']).MagicMock())
-sys.modules.setdefault('std_srvs', __import__('unittest.mock', fromlist=['MagicMock']).MagicMock())
-sys.modules.setdefault('std_srvs.srv', __import__('unittest.mock', fromlist=['MagicMock']).MagicMock())
-sys.modules.setdefault('cv2', __import__('unittest.mock', fromlist=['MagicMock']).MagicMock())
-sys.modules.setdefault('numpy', __import__('unittest.mock', fromlist=['MagicMock']).MagicMock())
+# Mock ROS/hardware dependencies so planner can be imported without them.
+# planner.py only imports math — no numpy or cv2 needed here, and we
+# deliberately avoid mocking numpy so pytest.approx() works correctly.
+from unittest.mock import MagicMock
+
+sys.modules.setdefault('rospy', MagicMock())
+sys.modules.setdefault('RPi', MagicMock())
+sys.modules.setdefault('RPi.GPIO', MagicMock())
+sys.modules.setdefault('clever', MagicMock())
+sys.modules.setdefault('clever.srv', MagicMock())
+sys.modules.setdefault('mavros_msgs', MagicMock())
+sys.modules.setdefault('mavros_msgs.srv', MagicMock())
+sys.modules.setdefault('std_srvs', MagicMock())
+sys.modules.setdefault('std_srvs.srv', MagicMock())
+sys.modules.setdefault('cv2', MagicMock())
 
 # Add repo root to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
