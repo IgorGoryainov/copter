@@ -4,11 +4,10 @@
 import math
 import os
 import sys
-import tempfile
 
 # Mock ROS/hardware dependencies so planner can be imported without them.
-# planner.py only imports math — no numpy or cv2 needed here, and we
-# deliberately avoid mocking numpy so pytest.approx() works correctly.
+# planner.py only imports math — cv2 mock is here only because test_video_detect.py
+# may contaminate sys.modules in the same pytest run.
 from unittest.mock import MagicMock
 
 sys.modules.setdefault('rospy', MagicMock())
@@ -25,8 +24,12 @@ sys.modules.setdefault('cv2', MagicMock())
 # Add repo root to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-import pytest
-from planner import nav4, read_waypoints
+from planner import nav4, read_waypoints  # noqa: E402
+
+
+def _approx(a, b, tol=1e-6):
+    """Return True if a and b are within tol of each other."""
+    return math.isclose(a, b, abs_tol=tol, rel_tol=0)
 
 
 class TestNav4:
@@ -34,43 +37,39 @@ class TestNav4:
 
     def test_due_east(self):
         # Target directly to the right (+x): bearing 0°
-        assert nav4(0, 0, 1, 0) == pytest.approx(0, abs=1e-9)
+        assert _approx(nav4(0, 0, 1, 0), 0)
 
     def test_due_north(self):
         # Target directly up (+y): bearing 90°
-        assert nav4(0, 0, 0, 1) == pytest.approx(90, abs=1e-9)
+        assert _approx(nav4(0, 0, 0, 1), 90)
 
     def test_due_west(self):
         # Target directly to the left (-x): bearing 180°
-        assert nav4(0, 0, -1, 0) == pytest.approx(180, abs=1e-9)
+        assert _approx(nav4(0, 0, -1, 0), 180)
 
     def test_due_south(self):
         # Target directly down (-y): bearing -90°
-        assert nav4(0, 0, 0, -1) == pytest.approx(-90, abs=1e-9)
+        assert _approx(nav4(0, 0, 0, -1), -90)
 
     def test_northeast_diagonal(self):
         # 45° northeast — equal +x and +y components
-        angle = nav4(0, 0, 1, 1)
-        assert angle == pytest.approx(45.0, abs=1e-6)
+        assert _approx(nav4(0, 0, 1, 1), 45.0)
 
     def test_southeast_diagonal(self):
         # -45° (southeast)
-        angle = nav4(0, 0, 1, -1)
-        assert angle == pytest.approx(-45.0, abs=1e-6)
+        assert _approx(nav4(0, 0, 1, -1), -45.0)
 
     def test_northwest_diagonal(self):
         # 135° (northwest)
-        angle = nav4(0, 0, -1, 1)
-        assert angle == pytest.approx(135.0, abs=1e-6)
+        assert _approx(nav4(0, 0, -1, 1), 135.0)
 
     def test_southwest_diagonal(self):
         # -135° (southwest)
-        angle = nav4(0, 0, -1, -1)
-        assert angle == pytest.approx(-135.0, abs=1e-6)
+        assert _approx(nav4(0, 0, -1, -1), -135.0)
 
     def test_non_origin_source(self):
         # Same relative direction from a non-origin position
-        assert nav4(2, 3, 3, 3) == pytest.approx(nav4(0, 0, 1, 0), abs=1e-9)
+        assert _approx(nav4(2, 3, 3, 3), nav4(0, 0, 1, 0))
 
     def test_result_in_range(self):
         # Result must stay in [-180, 180]
