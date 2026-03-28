@@ -1,0 +1,9 @@
+# Runtime dependencies
+# ROS and Clover-platform packages are installed via apt/rosdep on the drone:
+#   rospy, mavros_msgs, std_srvs — from ROS Noetic/Melodic
+#   clever (Clover SDK) — from https://github.com/CopterExpress/clover
+
+# Pure-Python runtime deps (pip-installable)
+opencv-python>=4.5
+numpy>=1.21
+RPi.GPIO>=0.7
